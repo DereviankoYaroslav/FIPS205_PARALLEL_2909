@@ -12,7 +12,17 @@
 #include "AVX512.h"
 #endif
 
+#if defined(_MSC_VER)
+#  define ALIGN64 __declspec(align(64))
+#else
+#  define ALIGN64 __attribute__((aligned(64)))
+#endif
 
+#if defined(_MSC_VER)
+#  define ALIGN32 __declspec(align(32))
+#else
+#  define ALIGN32 __attribute__((aligned(32)))
+#endif
 
 
 #ifndef _DEBUG
@@ -1164,8 +1174,7 @@ void PRF_with_predcalc(uint8_t* dest, void *pred_pk, uint8_t* adr, uint8_t* SK_s
 	short_shake256(dest, N, in, N + 32 + N);
 
 #if 0
-	__declspec (align (64))
-		uint64_t s[25] = { 0 };
+	ALIGN64 uint64_t s[25] = { 0 };
 	uint8_t* ps = (uint8_t*)s;
 	memcpy(ps, pk, N );
 	memcpy(ps + N , adr, 32);
@@ -1974,14 +1983,12 @@ void AVX_Tl(uint8_t* out, void* predcalc_pk, uint8_t adr[], __m256i* keys, uint3
 #define  BLOCK_SIZE  64
 
 	uint32_t* pk = (uint32_t*)predcalc_pk;
-	__declspec (align (64))
-	uint32_t state[8];
+	ALIGN64 uint32_t state[8];
 #else
 #define MIN_ZEROS_COUNT  16 
 #define  BLOCK_SIZE  128
 	uint64_t* pk = (uint64_t*)predcalc_pk;
-	__declspec (align (64))
-	uint64_t state[8];
+	ALIGN64 uint64_t state[8];
 
 
 #endif
@@ -2063,15 +2070,13 @@ void AVX_Tl_(uint8_t* out, const void* predcalc_pk, uint8_t adr[], uint8_t *keys
 #define  BLOCK_SIZE  64
 
 	uint32_t* pk = (uint32_t*)predcalc_pk;
-	__declspec (align (64))
-		uint32_t state[8];
+	ALIGN64 uint32_t state[8];
 	
 #else
 #define MIN_ZEROS_COUNT  16 
 #define  BLOCK_SIZE  128
 	uint64_t* pk = (uint64_t*)predcalc_pk;
-	__declspec (align (64))
-		uint64_t state[8];
+	ALIGN64 uint64_t state[8];
 
 
 #endif
