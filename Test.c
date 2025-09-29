@@ -628,228 +628,249 @@ int test_AVX_sha512_compress4()
     //__m256i state_256[8];
     __m256i block_256_1[80], block_256_2[80];
     __m256i in256[4];
-    
-    __m256i datas[4][4] = {0};
-    uint8_t *p[4] = { (uint8_t*)datas[0], (uint8_t *) datas[1], (uint8_t*)datas[2], (uint8_t*)datas[3] };
-    
-        uint8_t adr[22] = { 0 };
-        uint8_t node1[4][FIPS205_N], node2[4][FIPS205_N];
-        
-        
-        for(j = 0; j < 4; ++j)
+
+    __m256i datas[4][4] = { 0 };
+    uint8_t* p[4] = { (uint8_t*)datas[0], (uint8_t*)datas[1], (uint8_t*)datas[2], (uint8_t*)datas[3] };
+
+    uint8_t adr[22] = { 0 };
+    uint8_t node1[4][FIPS205_N], node2[4][FIPS205_N];
+
+
+    for (j = 0; j < 4; ++j)
+    {
+        for (int i = 0; i < FIPS205_N; ++i)
         {
-            for (int i = 0; i < FIPS205_N; ++i)
-            {
-                node1[j][i] = rand () % 256;
-                node2[j][i] = rand() % 256;
-            }
+            node1[j][i] = rand() % 256;
+            node2[j][i] = rand() % 256;
         }
-        setTreeHeight(adr, 1);
-        setType1(adr, FORS_TREE);
-        setHashAddress(adr, 2);
-        
-        memcpy(datas[0], adr, ADR_SIZE);
-        memcpy(datas[1], adr, ADR_SIZE);
-        memcpy(datas[2], adr, ADR_SIZE);
-        memcpy(datas[3], adr, ADR_SIZE);
-        uint32_t bytes = ADR_SIZE + 128 + 2 * FIPS205_N;
-        for (j = 0; j < 4; ++j)
-        {
-            memcpy(p[j] + ADR_SIZE, node1[j], FIPS205_N);
-            memcpy(p[j] + ADR_SIZE + FIPS205_N, node2 [j], FIPS205_N);
-            p[j][ADR_SIZE + 2 * FIPS205_N] = 0x80;
-            for (i = ADR_SIZE + 2 * FIPS205_N + 1; i < 125; ++i)
-                p[j][i] = 0;
-            p[j][125] = bytes >> 13;
-            p[j][126] = (uint8_t)(bytes >> 5);
-            p[j][127] = (uint8_t)(bytes << 3);
-        }
+    }
+    setTreeHeight(adr, 1);
+    setType1(adr, FORS_TREE);
+    setHashAddress(adr, 2);
 
-        for (j = 0; j < 4; ++j)
-        {
-            for (i = 0; i < 4; ++i)
-                datas[j][i] = _mm256_shuffle_epi8(datas[j][i], maska_for_shuffle_64);
-        }
-        uint64_t* p64 = (uint64_t*)datas;
-        uint64_t* pdatas = (uint64_t*)datas;
-        
-        for (i = 0; i < 16; ++i)
-        {
-#ifdef _MSC_VER
-            block_256_1[i].m256i_u64[0] = pdatas[0];
-            block_256_1[i].m256i_u64[1] = pdatas[16];
-            block_256_1[i].m256i_u64[2] = pdatas[32];
-            block_256_1[i].m256i_u64[3] = pdatas[48];
-            //block_256_1[i] = _mm256_setr_epi64x(pdatas, pdatas + 16, pdatas + 32, pdatas + 48);
-#else
-            ((uint64_t*)&block_256_1[i])[0] = pdatas[0];
-            ((uint64_t*)&block_256_1[i])[1] = pdatas[16];
-            ((uint64_t*)&block_256_1[i])[2] = pdatas[32];
-            ((uint64_t*)&block_256_1[i])[3] = pdatas[48];
-#endif
-            
-        }
+    memcpy(datas[0], adr, ADR_SIZE);
+    memcpy(datas[1], adr, ADR_SIZE);
+    memcpy(datas[2], adr, ADR_SIZE);
+    memcpy(datas[3], adr, ADR_SIZE);
+    uint32_t bytes = ADR_SIZE + 128 + 2 * FIPS205_N;
+    for (j = 0; j < 4; ++j)
+    {
+        memcpy(p[j] + ADR_SIZE, node1[j], FIPS205_N);
+        memcpy(p[j] + ADR_SIZE + FIPS205_N, node2[j], FIPS205_N);
+        p[j][ADR_SIZE + 2 * FIPS205_N] = 0x80;
+        for (i = ADR_SIZE + 2 * FIPS205_N + 1; i < 125; ++i)
+            p[j][i] = 0;
+        p[j][125] = bytes >> 13;
+        p[j][126] = (uint8_t)(bytes >> 5);
+        p[j][127] = (uint8_t)(bytes << 3);
+    }
 
-            //block_256_1[i] = _mm256_i32gather_epi64((const long long*)p64, _mm_setr_epi32(0, 16, 32, 48), 8);
-        //++p64;
-
-        ///////////////////////////////////////////////
-        FIPS205_AVX_fors_init_in_block0(in256, adr);
-        __m256i blocks[80];
-        create_blocks_for_in128(blocks, in256);
-        printf("");
-        __m256i temp_node1 [4] = {0}, temp_node1_[4];
-        __m256i temp_node2 [4] = {0}, temp_node2_ [4];
-        
-        //uint8_t* temp8[4] = { temp[0], temp[1], temp[2], temp[3] };
-        for (j = 0; j < 4; ++j)
-        {
-            memcpy(&temp_node1[j], node1[j], FIPS205_N);
-            memcpy(&temp_node2[j], node2[j], FIPS205_N);
-            temp_node1[j] = _mm256_shuffle_epi8(temp_node1[j], maska_for_shuffle_64);
-            temp_node2[j] = _mm256_shuffle_epi8(temp_node2[j], maska_for_shuffle_64);
-        }
-
-        
-#ifdef _MSC_VER
-        temp_node1_[0] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[0], temp_node1[1].m256i_i64[0], temp_node1[2].m256i_i64[0], temp_node1[3].m256i_i64[0]);
-        temp_node1_[1] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[1], temp_node1[1].m256i_i64[1], temp_node1[2].m256i_i64[1], temp_node1[3].m256i_i64[1]);
-        temp_node1_[2] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[2], temp_node1[1].m256i_i64[2], temp_node1[2].m256i_i64[2], temp_node1[3].m256i_i64[2]);
-        temp_node1_[3] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[3], temp_node1[1].m256i_i64[3], temp_node1[2].m256i_i64[3], temp_node1[3].m256i_i64[3]);
-
-        temp_node2_[0] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[0], temp_node2[1].m256i_i64[0], temp_node2[2].m256i_i64[0], temp_node2[3].m256i_i64[0]);
-        temp_node2_[1] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[1], temp_node2[1].m256i_i64[1], temp_node2[2].m256i_i64[1], temp_node2[3].m256i_i64[1]);
-        temp_node2_[2] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[2], temp_node2[1].m256i_i64[2], temp_node2[2].m256i_i64[2], temp_node2[3].m256i_i64[2]);
-        temp_node2_[3] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[3], temp_node2[1].m256i_i64[3], temp_node2[2].m256i_i64[3], temp_node2[3].m256i_i64[3]);
-#else
-    temp_node1_[0] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 0),_mm256_extract_epi64(temp_node1[1], 0),_mm256_extract_epi64(temp_node1[2], 0),_mm256_extract_epi64(temp_node1[3], 0));
-    temp_node1_[1] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 1),_mm256_extract_epi64(temp_node1[1], 1),_mm256_extract_epi64(temp_node1[2], 1),_mm256_extract_epi64(temp_node1[3], 1));
-    temp_node1_[2] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 2),_mm256_extract_epi64(temp_node1[1], 2),_mm256_extract_epi64(temp_node1[2], 2),_mm256_extract_epi64(temp_node1[3], 2));
-    temp_node1_[3] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 3),_mm256_extract_epi64(temp_node1[1], 3),_mm256_extract_epi64(temp_node1[2], 3),_mm256_extract_epi64(temp_node1[3], 3));
-
-    temp_node2_[0] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 0),_mm256_extract_epi64(temp_node2[1], 0),_mm256_extract_epi64(temp_node2[2], 0),_mm256_extract_epi64(temp_node2[3], 0));
-    temp_node2_[1] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 1),_mm256_extract_epi64(temp_node2[1], 1),_mm256_extract_epi64(temp_node2[2], 1),_mm256_extract_epi64(temp_node2[3], 1));
-    temp_node2_[2] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 2),_mm256_extract_epi64(temp_node2[1], 2),_mm256_extract_epi64(temp_node2[2], 2),_mm256_extract_epi64(temp_node2[3], 2));
-    temp_node2_[3] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 3),_mm256_extract_epi64(temp_node2[1], 3),_mm256_extract_epi64(temp_node2[2], 3),_mm256_extract_epi64(temp_node2[3], 3));
-#endif
-        
-        FIPS205_AVX_fors_init_in_block0(datas [0], adr);
-        
-        create_blocks_for_in128(block_256_2, datas [0]);
-         
-        AVX_fors_replace_blocks_keys4__(block_256_2, temp_node1_, temp_node2_);
-
-        res = 0;
-        for (i = 0; i < 16; ++i)
-        {
-            int64_t* p1 = (int64_t*)&block_256_1[i];
-            int64_t* p2 = (int64_t*)&block_256_2[i];
-            for (j = 0; j < 4; ++j)
-            {
-#ifdef _MSC_VER
-                if (block_256_1[i].m256i_i64[j] != block_256_2[i].m256i_i64[j])
-                    res = 1;
-#else
-                if (p1[j] != p2[j])
-                    res = 1;
-#endif
-            }
-         
-        }
-        printf("");
-
-        // convert data32 to data64;
-
-        ALIGN32 uint8_t data32[8][32] = { 0 };
-        res = 0;
-
-        __m256i data32_inv[8], blocks_data32 [8], *data32_256 = (__m256i*)data32;
-        for (i = 0; i < 8; ++i)
-        {
-            for (j = 0; j < FIPS205_N; ++j)
-            {
-                data32[i][j] = rand() % 256;
-            }
-        }
-
-        for (i = 0; i < 8; ++i)
-        {
-            data32_inv [i] = _mm256_shuffle_epi8(data32_256[i], maska_for_shuffle_32);
-        }
-
-        for (i = 0; i < 8; ++i)
-        {
-#ifdef _MSC_VER
-            for (j = 0; j < 8; ++j)
-            {
-                blocks_data32[i].m256i_i32[j] = data32_inv[j].m256i_u32[i];
-            }
-#else
-            for (i = 0; i < 8; ++i)
-            {
-                blocks_data32[i] = _mm256_setr_epi32(
-                    _mm256_extract_epi32(data32_inv[0], i),
-                    _mm256_extract_epi32(data32_inv[1], i),
-                    _mm256_extract_epi32(data32_inv[2], i),
-                    _mm256_extract_epi32(data32_inv[3], i),
-                    _mm256_extract_epi32(data32_inv[4], i),
-                    _mm256_extract_epi32(data32_inv[5], i),
-                    _mm256_extract_epi32(data32_inv[6], i),
-                    _mm256_extract_epi32(data32_inv[7], i)
-                );
-            }
-#endif
-        }
-
-        uint8_t data64[2][4][FIPS205_N] = { 0 };
-        __m256i data64_inv[2][4], blocks_data64[2][4], blocks_data64_ [2][4];
-
+    for (j = 0; j < 4; ++j)
+    {
         for (i = 0; i < 4; ++i)
+            datas[j][i] = _mm256_shuffle_epi8(datas[j][i], maska_for_shuffle_64);
+    }
+    uint64_t* p64 = (uint64_t*)datas;
+    uint64_t* pdatas = (uint64_t*)datas;
+
+    for (i = 0; i < 16; ++i)
+    {
+#ifdef _MSC_VER
+        block_256_1[i].m256i_u64[0] = pdatas[0];
+        block_256_1[i].m256i_u64[1] = pdatas[16];
+        block_256_1[i].m256i_u64[2] = pdatas[32];
+        block_256_1[i].m256i_u64[3] = pdatas[48];
+        //block_256_1[i] = _mm256_setr_epi64x(pdatas, pdatas + 16, pdatas + 32, pdatas + 48);
+
+        pdatas++;
+#else
+        block_256_1[i] = _mm256_set_epi64x(
+            pdatas[48],
+            pdatas[32],
+            pdatas[16],
+            pdatas[0]);
+        //block_256_1[i] = _mm256_setr_epi64x(pdatas, pdatas + 16, pdatas + 32, pdatas + 48);
+
+        pdatas++;
+#endif
+
+    }
+
+    //block_256_1[i] = _mm256_i32gather_epi64((const long long*)p64, _mm_setr_epi32(0, 16, 32, 48), 8);
+//++p64;
+
+///////////////////////////////////////////////
+    FIPS205_AVX_fors_init_in_block0(in256, adr);
+    __m256i blocks[80];
+    create_blocks_for_in128(blocks, in256);
+    printf("");
+    __m256i temp_node1[4] = { 0 }, temp_node1_[4];
+    __m256i temp_node2[4] = { 0 }, temp_node2_[4];
+
+    //uint8_t* temp8[4] = { temp[0], temp[1], temp[2], temp[3] };
+    for (j = 0; j < 4; ++j)
+    {
+        memcpy(&temp_node1[j], node1[j], FIPS205_N);
+        memcpy(&temp_node2[j], node2[j], FIPS205_N);
+        temp_node1[j] = _mm256_shuffle_epi8(temp_node1[j], maska_for_shuffle_64);
+        temp_node2[j] = _mm256_shuffle_epi8(temp_node2[j], maska_for_shuffle_64);
+    }
+
+#ifdef _MSC_VER
+    temp_node1_[0] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[0], temp_node1[1].m256i_i64[0], temp_node1[2].m256i_i64[0], temp_node1[3].m256i_i64[0]);
+    temp_node1_[1] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[1], temp_node1[1].m256i_i64[1], temp_node1[2].m256i_i64[1], temp_node1[3].m256i_i64[1]);
+    temp_node1_[2] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[2], temp_node1[1].m256i_i64[2], temp_node1[2].m256i_i64[2], temp_node1[3].m256i_i64[2]);
+    temp_node1_[3] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[3], temp_node1[1].m256i_i64[3], temp_node1[2].m256i_i64[3], temp_node1[3].m256i_i64[3]);
+
+    temp_node2_[0] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[0], temp_node2[1].m256i_i64[0], temp_node2[2].m256i_i64[0], temp_node2[3].m256i_i64[0]);
+    temp_node2_[1] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[1], temp_node2[1].m256i_i64[1], temp_node2[2].m256i_i64[1], temp_node2[3].m256i_i64[1]);
+    temp_node2_[2] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[2], temp_node2[1].m256i_i64[2], temp_node2[2].m256i_i64[2], temp_node2[3].m256i_i64[2]);
+    temp_node2_[3] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[3], temp_node2[1].m256i_i64[3], temp_node2[2].m256i_i64[3], temp_node2[3].m256i_i64[3]);
+#else
+    int64_t* p0 = (int64_t*)&temp_node1[0];
+    int64_t* p1 = (int64_t*)&temp_node1[1];
+    int64_t* p2 = (int64_t*)&temp_node1[2];
+    int64_t* p3 = (int64_t*)&temp_node1[3];
+
+    temp_node1_[0] = _mm256_setr_epi64x(p0[0], p1[0], p2[0], p3[0]);
+    temp_node1_[1] = _mm256_setr_epi64x(p0[1], p1[1], p2[1], p3[1]);
+    temp_node1_[2] = _mm256_setr_epi64x(p0[2], p1[2], p2[2], p3[2]);
+    temp_node1_[3] = _mm256_setr_epi64x(p0[3], p1[3], p2[3], p3[3]);
+
+    // Same for temp_node2_
+    int64_t* q0 = (int64_t*)&temp_node2[0];
+    int64_t* q1 = (int64_t*)&temp_node2[1];
+    int64_t* q2 = (int64_t*)&temp_node2[2];
+    int64_t* q3 = (int64_t*)&temp_node2[3];
+
+    temp_node2_[0] = _mm256_setr_epi64x(q0[0], q1[0], q2[0], q3[0]);
+    temp_node2_[1] = _mm256_setr_epi64x(q0[1], q1[1], q2[1], q3[1]);
+    temp_node2_[2] = _mm256_setr_epi64x(q0[2], q1[2], q2[2], q3[2]);
+    temp_node2_[3] = _mm256_setr_epi64x(q0[3], q1[3], q2[3], q3[3]);
+#endif
+
+    FIPS205_AVX_fors_init_in_block0(datas[0], adr);
+
+    create_blocks_for_in128(block_256_2, datas[0]);
+
+    AVX_fors_replace_blocks_keys4__(block_256_2, temp_node1_, temp_node2_);
+
+    res = 0;
+    for (i = 0; i < 16; ++i)
+    {
+#ifdef _MSC_VER
+#else
+        int64_t* p1 = (int64_t*)&block_256_1[i];
+        int64_t* p2 = (int64_t*)&block_256_2[i];
+#endif
+        for (j = 0; j < 4; ++j)
         {
-            data64_inv[0][i] = _mm256_shuffle_epi8(data32_256[i], maska_for_shuffle_64);
-            data64_inv[1][i] = _mm256_shuffle_epi8(data32_256[i + 4], maska_for_shuffle_64);
+#ifdef _MSC_VER
+            if (block_256_1[i].m256i_i64[j] != block_256_2[i].m256i_i64[j])
+                res = 1;
+#else
+            if (p1[j] != p2[j])
+                res = 1;
+#endif
         }
 
-        for (i = 0; i < 4; ++i)
-        {
-            for (j = 0; j < 4; ++j)
-            {
-#ifdef _MSC_VER
-                blocks_data64[1][i].m256i_u64[j] = data64_inv[1][j].m256i_u64[i];
-#else
-                int64_t val = _mm256_extract_epi64(data64_inv[1][j], i);
-                blocks_data64[1][i] = _mm256_insert_epi64(blocks_data64[1][i], val, j);
-#endif
-                }
+    }
+    printf("");
 
-            for (j = 0; j < 4; ++j)
-            {
-#ifdef _MSC_VER
-                blocks_data64[1][i].m256i_u64[j] = data64_inv[1][j].m256i_u64[i];
-#else
-                int64_t val = _mm256_extract_epi64(data64_inv[1][j], i);
-                blocks_data64[1][i] = _mm256_insert_epi64(blocks_data64[1][i], val, j);
-#endif
-            }
-        }
+    // convert data32 to data64;
 
-        convert_32_64(blocks_data64_, blocks_data32);
-        for (i = 0; i < 2; ++i)
+    ALIGN32 uint8_t data32[8][32] = { 0 };
+    res = 0;
+
+    __m256i data32_inv[8], blocks_data32[8], * data32_256 = (__m256i*)data32;
+    for (i = 0; i < 8; ++i)
+    {
+        for (j = 0; j < FIPS205_N; ++j)
         {
-            for (j = 0; j < 4; ++j)
-            {
-#ifdef _MSC_VER
-                if (blocks_data64[i]->m256i_u64[j] != blocks_data64_[i]->m256i_u64[j])
-                    res = 1;
-#else
-                if (_mm256_extract_epi64(blocks_data64[i][0], j) != _mm256_extract_epi64(blocks_data64_[i][0], j) ||
-                    _mm256_extract_epi64(blocks_data64[i][1], j) != _mm256_extract_epi64(blocks_data64_[i][1], j) ||
-                    _mm256_extract_epi64(blocks_data64[i][2], j) != _mm256_extract_epi64(blocks_data64_[i][2], j) ||
-                    _mm256_extract_epi64(blocks_data64[i][3], j) != _mm256_extract_epi64(blocks_data64_[i][3], j))
-                    res = 1;
-#endif
-            }
+            data32[i][j] = rand() % 256;
         }
+    }
+
+    for (i = 0; i < 8; ++i)
+    {
+        data32_inv[i] = _mm256_shuffle_epi8(data32_256[i], maska_for_shuffle_32);
+    }
+
+    for (i = 0; i < 8; ++i)
+    {
+#ifdef _MSC_VER
+#else
+        uint32_t* dest = (uint32_t*)&blocks_data32[i];
+#endif
+        for (j = 0; j < 8; ++j)
+        {
+#ifdef _MSC_VER
+            blocks_data32[i].m256i_i32[j] = data32_inv[j].m256i_u32[i];
+#else
+            uint32_t* src = (uint32_t*)&data32_inv[j];
+            dest[j] = src[i];
+#endif
+        }
+    }
+
+    uint8_t data64[2][4][FIPS205_N] = { 0 };
+    __m256i data64_inv[2][4], blocks_data64[2][4], blocks_data64_[2][4];
+
+    for (i = 0; i < 4; ++i)
+    {
+        data64_inv[0][i] = _mm256_shuffle_epi8(data32_256[i], maska_for_shuffle_64);
+        data64_inv[1][i] = _mm256_shuffle_epi8(data32_256[i + 4], maska_for_shuffle_64);
+    }
+
+    for (i = 0; i < 4; ++i)
+    {
+#ifdef _MSC_VER
+#else
+        uint64_t* dest0 = (uint64_t*)&blocks_data64[0][i];
+#endif
+        for (j = 0; j < 4; ++j)
+        {
+#ifdef _MSC_VER
+            blocks_data64[0][i].m256i_u64[j] = data64_inv[0][j].m256i_u64[i];
+#else
+            uint64_t* src0 = (uint64_t*)&data64_inv[0][j];
+            dest0[j] = src0[i];
+#endif
+        }
+#ifdef _MSC_VER
+#else
+        uint64_t* dest1 = (uint64_t*)&blocks_data64[1][i];
+#endif
+        for (j = 0; j < 4; ++j)
+        {
+#ifdef _MSC_VER
+            blocks_data64[1][i].m256i_u64[j] = data64_inv[1][j].m256i_u64[i];
+#else
+            uint64_t* src1 = (uint64_t*)&data64_inv[1][j];
+            dest1[j] = src1[i];
+#endif
+        }
+    }
+
+    convert_32_64(blocks_data64_, blocks_data32);
+    for (i = 0; i < 2; ++i)
+    {
+#ifdef _MSC_VER
+#else
+        uint64_t* p1 = (uint64_t*)blocks_data64[i];
+        uint64_t* p2 = (uint64_t*)blocks_data64_[i];
+#endif
+        for (j = 0; j < 4; ++j)
+        {
+#ifdef _MSC_VER
+            if (blocks_data64[i]->m256i_u64[j] != blocks_data64_[i]->m256i_u64[j])
+                res = 1;
+#else
+            if (p1[j] != p2[j])
+                res = 1;
+#endif
+        }
+    }
 
 
     return res;
