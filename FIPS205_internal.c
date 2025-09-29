@@ -578,7 +578,7 @@ SUCCESS FIPS205_verify_internal(const uint8_t* M, uint32_t M_len, const uint8_t*
 //			SIG_FORS,
 //			md,
 //			&AVX_predcalc_pk_256,		
-//			AVX_predcalc_pk_512,		
+//			&AVX_predcalc_pk_512,
 //			adr);
 //#endif
 
@@ -596,7 +596,7 @@ SUCCESS FIPS205_verify_internal(const uint8_t* M, uint32_t M_len, const uint8_t*
 			pkFromSig,
 			SIG_FORS,
 			md,
-			AVX_predcalc_pk_512,		// one 256 0r 512
+			&AVX_predcalc_pk_512,		// one 256 0r 512
 			AVX_predcalc_pk_256_,		// block 256
 			AVX_predcalc_pk_512_,		// block 512
 			adr);
@@ -707,7 +707,7 @@ SUCCESS FIPS205_verify_internal_new__(const uint8_t* M, uint32_t M_len, const ui
 		//			SIG_FORS,
 		//			md,
 		//			&AVX_predcalc_pk_256,		
-		//			AVX_predcalc_pk_512,		
+		//			&AVX_predcalc_pk_512,
 		//			adr);
 		//#endif
 
@@ -725,7 +725,7 @@ SUCCESS FIPS205_verify_internal_new__(const uint8_t* M, uint32_t M_len, const ui
 			pkFromSig,
 			SIG_FORS,
 			md,
-			AVX_predcalc_pk_512,		// one 256 0r 512
+			&AVX_predcalc_pk_512,		// one 256 0r 512
 			&AVX_predcalc_pk_256,		// block 256
 			//AVX_predcalc_pk_512_,		// block 512
 			adr);
