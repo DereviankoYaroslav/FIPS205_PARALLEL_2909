@@ -675,13 +675,18 @@ int test_AVX_sha512_compress4()
         
         for (i = 0; i < 16; ++i)
         {
+#ifdef _MSC_VER
             block_256_1[i].m256i_u64[0] = pdatas[0];
             block_256_1[i].m256i_u64[1] = pdatas[16];
             block_256_1[i].m256i_u64[2] = pdatas[32];
             block_256_1[i].m256i_u64[3] = pdatas[48];
             //block_256_1[i] = _mm256_setr_epi64x(pdatas, pdatas + 16, pdatas + 32, pdatas + 48);
-            
-            pdatas ++;
+#else
+            ((uint64_t*)&block_256_1[i])[0] = pdatas[0];
+            ((uint64_t*)&block_256_1[i])[1] = pdatas[16];
+            ((uint64_t*)&block_256_1[i])[2] = pdatas[32];
+            ((uint64_t*)&block_256_1[i])[3] = pdatas[48];
+#endif
             
         }
 
@@ -706,6 +711,7 @@ int test_AVX_sha512_compress4()
         }
 
         
+#ifdef _MSC_VER
         temp_node1_[0] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[0], temp_node1[1].m256i_i64[0], temp_node1[2].m256i_i64[0], temp_node1[3].m256i_i64[0]);
         temp_node1_[1] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[1], temp_node1[1].m256i_i64[1], temp_node1[2].m256i_i64[1], temp_node1[3].m256i_i64[1]);
         temp_node1_[2] = _mm256_setr_epi64x(temp_node1[0].m256i_i64[2], temp_node1[1].m256i_i64[2], temp_node1[2].m256i_i64[2], temp_node1[3].m256i_i64[2]);
@@ -715,7 +721,17 @@ int test_AVX_sha512_compress4()
         temp_node2_[1] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[1], temp_node2[1].m256i_i64[1], temp_node2[2].m256i_i64[1], temp_node2[3].m256i_i64[1]);
         temp_node2_[2] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[2], temp_node2[1].m256i_i64[2], temp_node2[2].m256i_i64[2], temp_node2[3].m256i_i64[2]);
         temp_node2_[3] = _mm256_setr_epi64x(temp_node2[0].m256i_i64[3], temp_node2[1].m256i_i64[3], temp_node2[2].m256i_i64[3], temp_node2[3].m256i_i64[3]);
+#else
+    temp_node1_[0] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 0),_mm256_extract_epi64(temp_node1[1], 0),_mm256_extract_epi64(temp_node1[2], 0),_mm256_extract_epi64(temp_node1[3], 0));
+    temp_node1_[1] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 1),_mm256_extract_epi64(temp_node1[1], 1),_mm256_extract_epi64(temp_node1[2], 1),_mm256_extract_epi64(temp_node1[3], 1));
+    temp_node1_[2] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 2),_mm256_extract_epi64(temp_node1[1], 2),_mm256_extract_epi64(temp_node1[2], 2),_mm256_extract_epi64(temp_node1[3], 2));
+    temp_node1_[3] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node1[0], 3),_mm256_extract_epi64(temp_node1[1], 3),_mm256_extract_epi64(temp_node1[2], 3),_mm256_extract_epi64(temp_node1[3], 3));
 
+    temp_node2_[0] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 0),_mm256_extract_epi64(temp_node2[1], 0),_mm256_extract_epi64(temp_node2[2], 0),_mm256_extract_epi64(temp_node2[3], 0));
+    temp_node2_[1] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 1),_mm256_extract_epi64(temp_node2[1], 1),_mm256_extract_epi64(temp_node2[2], 1),_mm256_extract_epi64(temp_node2[3], 1));
+    temp_node2_[2] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 2),_mm256_extract_epi64(temp_node2[1], 2),_mm256_extract_epi64(temp_node2[2], 2),_mm256_extract_epi64(temp_node2[3], 2));
+    temp_node2_[3] = _mm256_setr_epi64x(_mm256_extract_epi64(temp_node2[0], 3),_mm256_extract_epi64(temp_node2[1], 3),_mm256_extract_epi64(temp_node2[2], 3),_mm256_extract_epi64(temp_node2[3], 3));
+#endif
         
         FIPS205_AVX_fors_init_in_block0(datas [0], adr);
         
@@ -726,10 +742,17 @@ int test_AVX_sha512_compress4()
         res = 0;
         for (i = 0; i < 16; ++i)
         {
+            int64_t* p1 = (int64_t*)&block_256_1[i];
+            int64_t* p2 = (int64_t*)&block_256_2[i];
             for (j = 0; j < 4; ++j)
             {
+#ifdef _MSC_VER
                 if (block_256_1[i].m256i_i64[j] != block_256_2[i].m256i_i64[j])
                     res = 1;
+#else
+                if (p1[j] != p2[j])
+                    res = 1;
+#endif
             }
          
         }
@@ -756,11 +779,26 @@ int test_AVX_sha512_compress4()
 
         for (i = 0; i < 8; ++i)
         {
-            
+#ifdef _MSC_VER
             for (j = 0; j < 8; ++j)
             {
                 blocks_data32[i].m256i_i32[j] = data32_inv[j].m256i_u32[i];
             }
+#else
+            for (i = 0; i < 8; ++i)
+            {
+                blocks_data32[i] = _mm256_setr_epi32(
+                    _mm256_extract_epi32(data32_inv[0], i),
+                    _mm256_extract_epi32(data32_inv[1], i),
+                    _mm256_extract_epi32(data32_inv[2], i),
+                    _mm256_extract_epi32(data32_inv[3], i),
+                    _mm256_extract_epi32(data32_inv[4], i),
+                    _mm256_extract_epi32(data32_inv[5], i),
+                    _mm256_extract_epi32(data32_inv[6], i),
+                    _mm256_extract_epi32(data32_inv[7], i)
+                );
+            }
+#endif
         }
 
         uint8_t data64[2][4][FIPS205_N] = { 0 };
@@ -776,12 +814,22 @@ int test_AVX_sha512_compress4()
         {
             for (j = 0; j < 4; ++j)
             {
-                blocks_data64 [0][i].m256i_u64[j] = data64_inv[0][j].m256i_u64[i];
-            }
+#ifdef _MSC_VER
+                blocks_data64[1][i].m256i_u64[j] = data64_inv[1][j].m256i_u64[i];
+#else
+                int64_t val = _mm256_extract_epi64(data64_inv[1][j], i);
+                blocks_data64[1][i] = _mm256_insert_epi64(blocks_data64[1][i], val, j);
+#endif
+                }
 
             for (j = 0; j < 4; ++j)
             {
+#ifdef _MSC_VER
                 blocks_data64[1][i].m256i_u64[j] = data64_inv[1][j].m256i_u64[i];
+#else
+                int64_t val = _mm256_extract_epi64(data64_inv[1][j], i);
+                blocks_data64[1][i] = _mm256_insert_epi64(blocks_data64[1][i], val, j);
+#endif
             }
         }
 
@@ -790,8 +838,16 @@ int test_AVX_sha512_compress4()
         {
             for (j = 0; j < 4; ++j)
             {
+#ifdef _MSC_VER
                 if (blocks_data64[i]->m256i_u64[j] != blocks_data64_[i]->m256i_u64[j])
                     res = 1;
+#else
+                if (_mm256_extract_epi64(blocks_data64[i][0], j) != _mm256_extract_epi64(blocks_data64_[i][0], j) ||
+                    _mm256_extract_epi64(blocks_data64[i][1], j) != _mm256_extract_epi64(blocks_data64_[i][1], j) ||
+                    _mm256_extract_epi64(blocks_data64[i][2], j) != _mm256_extract_epi64(blocks_data64_[i][2], j) ||
+                    _mm256_extract_epi64(blocks_data64[i][3], j) != _mm256_extract_epi64(blocks_data64_[i][3], j))
+                    res = 1;
+#endif
             }
         }
 
@@ -4258,8 +4314,8 @@ int test_FIPS205_fors_and_HT()
                 PK_fors2,
                 (const uint8_t*)fors_sign1,
                 md,
-                state512, // 256 or 512
-                state256, // 256
+                &state512, // 256 or 512
+                &state256, // 256
                 //state512_,
                 adr);
 #endif

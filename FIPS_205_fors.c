@@ -701,7 +701,11 @@ void FIPS205_AVX_fors_H_(__m256i *keysBlocks, __m256i* in_block, const void* PK_
 	__m256i in128[16], * ind256 = (__m256i*)ind;
 	__m256i blocks[80];
 	
+#ifdef _MSC_VER
 	uint8_t* w = in_block[0].m256i_i8;
+#else
+	uint8_t* w = (uint8_t*)&in_block[0];
+#endif
 	setTreeHeight(w, z);
 	setType1(w, FORS_TREE);
 	
