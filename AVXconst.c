@@ -1,5 +1,18 @@
 #include "AVXconst.h"
-__declspec (align (64))
+#if defined(_MSC_VER)
+#  define ALIGN64 __declspec(align(64))
+#else
+#  define ALIGN64 __attribute__((aligned(64)))
+#endif
+
+#if defined(_MSC_VER)
+#  define ALIGN32 __declspec(align(32))
+#else
+#  define ALIGN32 __attribute__((aligned(32)))
+#endif
+
+
+ALIGN64
 const uint8_t u8_maska[32] = {
 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12,
 19, 18, 17, 16, 23, 22, 21, 20, 27, 26, 25, 24, 31, 30, 29, 28 };

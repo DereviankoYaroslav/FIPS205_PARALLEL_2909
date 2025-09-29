@@ -1,6 +1,7 @@
 ﻿#include "FIPS_205_Fors.h"
 #include "FIPS_205_Adr.h"
 #include "AVX512.h"
+#include <malloc.h>
 
 #if defined(_MSC_VER)
 #  define ALIGN64 __declspec(align(64))
@@ -2334,7 +2335,12 @@ uint8_t * FIPS205_AVX_fors_sign_new(uint8_t *sign, uint8_t *md, /*auth[FIPS205_K
 			__m256i temp1[1 << FIPS205_A];
 			__m256i temp2[1 << FIPS205_A];
 #else
-__m256i* temp1 = malloc(((1 << (FIPS205_A + 1))*  sizeof (__m256i))), *temp2 = temp1 + (1 << (FIPS205_A));
+			__m256i* temp1 = (__m256i*)_aligned_malloc(((1 << (FIPS205_A + 1)) * sizeof(__m256i)), 32);
+			if (!temp1) {
+				// Handle allocation error
+				//return NULL;
+			}
+			__m256i* temp2 = temp1 + (1 << FIPS205_A);
 #endif
 			
 			uint32_t k = 0, l = 0, r = FIPS205_A;
@@ -2465,7 +2471,7 @@ __m256i* temp1 = malloc(((1 << (FIPS205_A + 1))*  sizeof (__m256i))), *temp2 = t
 				//s /= 2;
 				r /= 2;
 			}
-			free(temp1);
+			_aligned_free(temp1);
 //#endif
 
 		}
@@ -3360,8 +3366,13 @@ uint8_t* FIPS205_AVX_fors_sign_new__(uint8_t* sign, uint8_t* md, /*auth[FIPS205_
 
 		uint8_t* pblocks = (uint8_t*)in_block_for_H;
 		
-		__m256i* temp1 = malloc(((1 << (FIPS205_A + 1)) * sizeof(__m256i))), * temp2 = temp1 + (1 << (FIPS205_A));
-
+		//__m256i* temp1 = malloc(((1 << (FIPS205_A + 1)) * sizeof(__m256i))), * temp2 = temp1 + (1 << (FIPS205_A));
+		__m256i* temp1 = (__m256i*)_aligned_malloc(((1 << (FIPS205_A + 1)) * sizeof(__m256i)), 32);
+		if (!temp1) {
+			// Handle allocation error
+			//return NULL;
+		}
+		__m256i* temp2 = temp1 + (1 << FIPS205_A);
 
 		uint32_t k = 0, l = 0, r = FIPS205_A;
 
@@ -3727,7 +3738,8 @@ uint8_t* FIPS205_AVX_fors_sign_new__(uint8_t* sign, uint8_t* md, /*auth[FIPS205_
 			//s /= 2;
 			r /= 2;
 		}
-		free(temp1);
+		//free(temp1);
+		_aligned_free(temp1);
 		//#endif
 
 	}
