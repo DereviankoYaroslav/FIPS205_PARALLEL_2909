@@ -19,12 +19,11 @@
 #  define ALIGN32 __attribute__((aligned(32)))
 #endif
 
-
 int check_properties(int fun, uint32_t index, uint32_t bit) {
-	uint32_t r[4];
-	uint32_t mask = 1 << bit;
-	__cpuidex((int*)r, fun, 0);
-	return (r[index] & mask) == mask;
+    uint32_t r[4];
+    uint32_t mask = 1 << bit;
+    __cpuidex((int*)r, fun, 0);
+    return (r[index] & mask) == mask;
 }
 int check_sha256()
 {

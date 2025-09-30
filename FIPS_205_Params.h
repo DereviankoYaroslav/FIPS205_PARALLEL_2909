@@ -24,7 +24,7 @@ extern size_t smodes_count;
 
 //#define FIPS_205_MODE	SLH_DSA_SHA2_128s // +
 //#define FIPS_205_MODE	SLH_DSA_SHAKE_128s
-//#define FIPS_205_MODE	SLH_DSA_SHA2_128f // +
+#define FIPS_205_MODE	SLH_DSA_SHA2_128f // +
 //#define FIPS_205_MODE	SLH_DSA_SHAKE_128f
 
 //#define FIPS_205_MODE	SLH_DSA_SHA2_192s // +
@@ -34,7 +34,7 @@ extern size_t smodes_count;
 
 //#define FIPS_205_MODE	SLH_DSA_SHA2_256s // +
 //#define FIPS_205_MODE	SLH_DSA_SHAKE_256s
-#define FIPS_205_MODE	SLH_DSA_SHA2_256f // +
+//#define FIPS_205_MODE	SLH_DSA_SHA2_256f // +
 //#define FIPS_205_MODE	SLH_DSA_SHAKE_256f
 
 #if ((FIPS_205_MODE % 2) == 0)
